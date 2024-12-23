@@ -141,7 +141,7 @@ export const sendVerifyOtp = async (req, res) => {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
 
     user.verifyOtp = otp;
-    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000
+    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000;
 
     await user.save();
 
@@ -155,9 +155,9 @@ export const sendVerifyOtp = async (req, res) => {
     await transporter.sendMail(mailOption);
 
     res.json({
-      success:true,
-      message:"Verification OTP is sent on email"
-    })
+      success: true,
+      message: "Verification OTP is sent on email",
+    });
   } catch (error) {
     return res.json({
       success: false,
@@ -166,57 +166,69 @@ export const sendVerifyOtp = async (req, res) => {
   }
 };
 
-
-export const verifyEmail  =  async (req,res) => {
+//verify the email using otp
+export const verifyEmail = async (req, res) => {
   const { userId, otp } = req.body;
 
   if (!userId || !otp) {
     return res.json({
-      success:false,
-      message:"Missing Details"
-    })
+      success: false,
+      message: "Missing Details",
+    });
   }
 
   try {
     const user = await userModel.findById(userId);
 
-if (!user) {
-  return res.json({
-    success:false,
-    message:"User not found"
-  })
-}
-if (user.verifyOtp === '' || user.verifyOtp !== otp) {
-       return res.json({
-        success:false,
-        message:"Invalid OTP"
-       })
-}
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    if (user.verifyOtp === "" || user.verifyOtp !== otp) {
+      return res.json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
-if(user.verifyOtpExpireAt < Date.now()) {
-  res.json({
-    success:false,
-    message:"OTP Expired"
-  })
-}
+    if (user.verifyOtpExpireAt < Date.now()) {
+      res.json({
+        success: false,
+        message: "OTP Expired",
+      });
+    }
 
-   user.isAccountVerified = true;
-   user.verifyOtp = '';
-   user.verifyOtpExpireAt = 0;
+    user.isAccountVerified = true;
+    user.verifyOtp = "";
+    user.verifyOtpExpireAt = 0;
 
-   await user.save();
+    await user.save();
 
-   return res.json({
-    success:true,
-    message:"Email Verified successfully"
-   })
-
-    
+    return res.json({
+      success: true,
+      message: "Email Verified successfully",
+    });
   } catch (error) {
     return res.json({
       success: false,
       message: error.message,
     });
   }
+};
 
-}
+//check if user is authenticated
+//before this controller function we will execute the middleware and if the middleware will be executed after that this isauth functio will be executed and it will return the respinse sucess true
+export const isAuthenticated = async (req, res) => {
+  try {
+    return res.json({
+      success: true,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
