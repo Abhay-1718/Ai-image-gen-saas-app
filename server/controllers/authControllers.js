@@ -41,8 +41,8 @@ export const register = async (req, res) => {
     const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: email,
-      subject: "Welcome to somename ",
-      text: `Welcome to somename website. Your account has been created with email id : ${email}`,
+      subject: "Welcome to PixiForge ",
+      text: `Welcome to PixiForge website. Your account has been created with email id : ${email}`,
     };
 
     await transporter.sendMail(mailOptions);
