@@ -1,25 +1,30 @@
-import {Route, Routes} from 'react-router-dom';
-import Home from './pages/Home'
-import Login from './pages/Login'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AppContextProvider } from "./context/AppContext"; // Correct way to import AppContextProvider
+import { useContext } from "react";
+import { AppContext } from "./context/AppContext"; 
+import Home from './pages/Home';
+import Login from './pages/Login';
 import EmailVerify from './pages/EmailVerify';
+import ResetPassword from './pages/ResetPassword';
 import { ToastContainer } from 'react-toastify';
-import ResetPassword from './pages/ResetPassword'
-
 
 const App = () => {
+  // const { isLoggedin } = useContext(AppContext);
+
   return (
     <>
-    <ToastContainer>
+    <AppContextProvider>
+      <ToastContainer />
       <Routes>
-        <Route path='/' element={<Home/>}/>
-        <Route path='/login' element={<Login/>}/>
-        <Route path='/email-verify' element={<EmailVerify/>}/>
-        <Route path='/reset-password' element={<ResetPassword/>}/>
+        {/* If not logged in, redirect to login page */}
+        <Route path="/"  element= { <Home /> } />
+        <Route path="/login" element={<Login />} />
+        <Route path="/email-verify" element={<EmailVerify />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
-      </ToastContainer>
-
+      </AppContextProvider>
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
