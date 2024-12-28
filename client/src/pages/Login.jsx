@@ -15,8 +15,8 @@ const Login = () => {
   const onsubmitHandler = async (e) => {
     try {
       e.preventDefault();
-
-      axios.defaults.withCredentials = true; //it will send the cookies also with this request
+  
+      axios.defaults.withCredentials = true; // Send cookies with the request
       if (state === "Sign Up") {
         const { data } = await axios.post(backendUrl + "/api/auth/register", {
           name,
@@ -24,8 +24,9 @@ const Login = () => {
           password,
         });
         if (data.success) {
+          localStorage.setItem("token", data.token); // Save token to localStorage
           setIsLoggedin(true);
-          getUserData()
+          getUserData();
           navigate("/");
         } else {
           toast.error(data.message);
@@ -36,18 +37,19 @@ const Login = () => {
           password,
         });
         if (data.success) {
+          localStorage.setItem("token", data.token); // Save token to localStorage
           setIsLoggedin(true);
-          getUserData()
+          getUserData();
           navigate("/");
         } else {
           toast.error(data.message);
         }
       }
-    } catch (data) {
-      toast.error(data.message);
+    } catch (error) {
+      toast.error(error.message);
     }
   };
-
+  
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0">
       <div className="w-full max-w-md mx-auto bg-white p-6 rounded-md shadow-md border border-gray-950">

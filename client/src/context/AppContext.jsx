@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -9,20 +9,41 @@ export const AppContext = createContext({
   userData: null,
   setUserData: () => {},
   getUserData: () => {},
+  getAuthState: () => {},
 });
 
 export const AppContextProvider = ({ children }) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-  console.log("Backend URL:", backendUrl); // Debugging
+  axios.defaults.withCredentials = true;
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
-  const [isLoggedin, setIsLoggedin] = useState(false);
-  const [userData, setUserData] = useState(null); // Initialize with null for user data
+  const [isLoggedin, setIsLoggedin] = useState(
+    localStorage.getItem("token") ? true : false
+  );
+  const [userData, setUserData] = useState(null);
+
+  const getAuthState = async () => {
+    try {
+      // Check if token exists in localStorage
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        axios.defaults.headers["Authorization"] = `Bearer ${token}`;
+        const { data } = await axios.get(backendUrl + "/api/auth/is-auth");
+
+        if (data.success) {
+          setIsLoggedin(true);
+          getUserData();
+        }
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   const getUserData = async () => {
     try {
-      const { data } = await axios.get(backendUrl + "/api/user/data", {
-        params: { userId: "userId" }  // Make sure userId or email is passed in params.
-      });
+      const { data } = await axios.get(backendUrl + "/api/user/data");
       if (data.success) {
         setUserData(data.userData);
       } else {
@@ -32,7 +53,10 @@ export const AppContextProvider = ({ children }) => {
       toast.error(error.message);
     }
   };
-  
+
+  useEffect(() => {
+    getAuthState();
+  }, []);
 
   const value = {
     backendUrl,
