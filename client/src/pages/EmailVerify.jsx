@@ -1,5 +1,5 @@
 import { assets } from "../assets/asset";
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import axios from 'axios'
 import {AppContext} from '../context/AppContext'
 import { toast } from "react-toastify";
@@ -56,11 +56,16 @@ const EmailVerify = () => {
     }
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen px-6 sm:px-0">
-      <img src={assets.logo} alt="Logo" className="w-28 sm:w-32" />
+  useEffect(() => {
+    isLoggedin && userData && userData.isAccountVerified && navigate('/')
+  }, [isLoggedin,userData])
+  
 
-      <form action="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+  return (
+    <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-300 to bg-purple-500">
+      <img src={assets.logo} alt="Logo" className=" absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer" />
+
+      <form className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
       onSubmit={onSubmitHandler}
       >
         <h1 className="text-white text-2xl font-semibold text-center mb-4">
