@@ -16,7 +16,7 @@ const Login = () => {
     try {
       e.preventDefault();
   
-      axios.defaults.withCredentials = true; // Send cookies with the request
+      axios.defaults.withCredentials = true;
       if (state === "Sign Up") {
         const { data } = await axios.post(backendUrl + "/api/auth/register", {
           name,
@@ -24,7 +24,7 @@ const Login = () => {
           password,
         });
         if (data.success) {
-          localStorage.setItem("token", data.token); // Save token to localStorage
+          localStorage.setItem("token", data.token); 
           setIsLoggedin(true);
           getUserData();
           navigate("/");
@@ -37,7 +37,7 @@ const Login = () => {
           password,
         });
         if (data.success) {
-          localStorage.setItem("token", data.token); // Save token to localStorage
+          localStorage.setItem("token", data.token); 
           setIsLoggedin(true);
           getUserData();
           navigate("/");

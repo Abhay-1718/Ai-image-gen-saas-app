@@ -131,32 +131,46 @@ export const logout = async (req, res) => {
 //send verification otp to the user's email
 export const sendVerifyOtp = async (req, res) => {
   try {
-    const { userId } = req.body;
+    // The userId comes from the decoded token in userAuth middleware
+    const userId = req.user.id;
 
+    // Find the user in the database using the userId
     const user = await userModel.findById(userId);
 
-    if (user.isAccountVerified) {
-      return res.json({ success: false, message: "account already verified" });
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User Not Found"
+      });
     }
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
 
+    if (user.isAccountVerified) {
+      return res.json({
+        success: false,
+        message: "Account already verified"
+      });
+    }
+
+    // Generate OTP and save to user model
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
     user.verifyOtp = otp;
-    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000;
+    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000;  // OTP expires in 10 minutes
 
     await user.save();
 
-    const mailOption = {
+    // Send OTP email
+    const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: user.email,
-      subject: "Account Verification OTP ",
-      text: `Your OTP is ${otp}. Verify your account using this OTP.Expires in 10 minutes`,
+      subject: "Account Verification OTP",
+      text: `Your OTP is ${otp}. Verify your account using this OTP. Expires in 10 minutes.`,
     };
 
-    await transporter.sendMail(mailOption);
+    await transporter.sendMail(mailOptions);
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Verification OTP is sent on email",
+      message: "Verification OTP sent to email",
     });
   } catch (error) {
     return res.json({
@@ -166,14 +180,18 @@ export const sendVerifyOtp = async (req, res) => {
   }
 };
 
+
 //verify the email using otp
 export const verifyEmail = async (req, res) => {
-  const { userId, otp } = req.body;
+  const { otp } = req.body;  // Now only the otp is required from the body
 
-  if (!userId || !otp) {
+  // Get the userId from the authenticated token
+  const userId = req.user.id;
+
+  if (!otp) {
     return res.json({
       success: false,
-      message: "Missing Details",
+      message: "Missing OTP",
     });
   }
 
@@ -186,6 +204,7 @@ export const verifyEmail = async (req, res) => {
         message: "User not found",
       });
     }
+
     if (user.verifyOtp === "" || user.verifyOtp !== otp) {
       return res.json({
         success: false,
@@ -194,7 +213,7 @@ export const verifyEmail = async (req, res) => {
     }
 
     if (user.verifyOtpExpireAt < Date.now()) {
-      res.json({
+      return res.json({
         success: false,
         message: "OTP Expired",
       });
@@ -217,6 +236,7 @@ export const verifyEmail = async (req, res) => {
     });
   }
 };
+
 
 //check if user is authenticated
 //before this controller function we will execute the middleware and if the middleware will be executed after that this isauth functio will be executed and it will return the respinse sucess true
