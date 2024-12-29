@@ -1,8 +1,17 @@
 import { assets } from "../assets/asset";
-import { useRef } from "react";
+import { useContext, useRef } from "react";
+import axios from 'axios'
+import {AppContext} from '../context/AppContext'
+import { toast } from "react-toastify";
+import {useNavigate} from 'react-router-dom'
+
 
 const EmailVerify = () => {
   const inputRefs = useRef([]);
+  axios.defaults.withCredentials = true;
+  const navigate = useNavigate()
+
+  const {backendUrl, isLoggedin, userData, getUserData } = useContext(AppContext)
   const handleInput = (e,index) => {
     if (e.target.value.length > 0 && index < inputRefs.current.length -1) {
       inputRefs.current[index + 1].focus();
@@ -26,11 +35,34 @@ const EmailVerify = () => {
 
   }
 
+  const onSubmitHandler = async (e) => {
+    try {
+      e.preventDefault();
+      const otpArray = inputRefs.current.map(e => e.value)  
+      const otp = otpArray.join('')
+
+      const {data} = await axios.post(backendUrl + '/api/auth/verify-account' , {otp})
+
+      if (data.success) {
+        toast.success(data.message)
+        getUserData();
+        navigate('/')
+        
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0">
       <img src={assets.logo} alt="Logo" className="w-28 sm:w-32" />
 
-      <form action="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
+      <form action="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+      onSubmit={onSubmitHandler}
+      >
         <h1 className="text-white text-2xl font-semibold text-center mb-4">
           Email Verify OTP
         </h1>
@@ -49,6 +81,7 @@ const EmailVerify = () => {
                 ref={e => inputRefs.current[index] = e}
                 onInput={(e) => handleInput(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
+
                 className="w-12 h-12 bg-[#333A5C] text-white text-center text-xl rounded-md"
               />
             ))}
