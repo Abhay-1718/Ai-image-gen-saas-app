@@ -12,7 +12,15 @@ const userSchema = mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function () {
+      
+      return !this.googleId;
+    },
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, 
   },
   verifyOtp: {
     type: String,
@@ -36,6 +44,6 @@ const userSchema = mongoose.Schema({
   },
 });
 
-const userModel = mongoose.models.user || mongoose.model('user', userSchema)
+const userModel = mongoose.models.user || mongoose.model("user", userSchema);
 
 export default userModel;
