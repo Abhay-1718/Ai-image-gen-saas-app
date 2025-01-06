@@ -2,6 +2,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import transporter from "../config/nodeMailer.js";
+import { OAuth2Client } from "google-auth-library";
+import axios from "axios";
+import { google } from 'googleapis';
+
+
 
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -140,21 +145,21 @@ export const sendVerifyOtp = async (req, res) => {
     if (!user) {
       return res.json({
         success: false,
-        message: "User Not Found"
+        message: "User Not Found",
       });
     }
 
     if (user.isAccountVerified) {
       return res.json({
         success: false,
-        message: "Account already verified"
+        message: "Account already verified",
       });
     }
 
     // Generate OTP and save to user model
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     user.verifyOtp = otp;
-    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000;  // OTP expires in 10 minutes
+    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
 
     await user.save();
 
@@ -180,10 +185,9 @@ export const sendVerifyOtp = async (req, res) => {
   }
 };
 
-
 //verify the email using otp
 export const verifyEmail = async (req, res) => {
-  const { otp } = req.body;  // Now only the otp is required from the body
+  const { otp } = req.body; // Now only the otp is required from the body
 
   // Get the userId from the authenticated token
   const userId = req.user.id;
@@ -236,7 +240,6 @@ export const verifyEmail = async (req, res) => {
     });
   }
 };
-
 
 //check if user is authenticated
 //before this controller function we will execute the middleware and if the middleware will be executed after that this isauth functio will be executed and it will return the respinse sucess true
@@ -353,6 +356,74 @@ export const resetPassword = async (req, res) => {
     return res.json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+
+
+
+const oauth2Client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  'postmessage'
+);
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.json({ success: false, message: 'Missing Google Auth Code' });
+    }
+
+    
+    const { tokens } = await oauth2Client.getToken(code);
+    
+    oauth2Client.setCredentials(tokens);
+
+    // Fetch user info from Google
+    const userInfoResponse = await axios.get(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokens.access_token}`
+    );
+
+    const { email, name, sub: googleId } = userInfoResponse.data;
+
+    // Check if the user exists by email or googleId
+    let user = await userModel.findOne({ $or: [{ email }, { googleId }] });
+
+    // If user does not exist, create a new one with googleId
+    if (!user) {
+      user = new userModel({
+        name,
+        email,
+        googleId, // Adding googleId instead of password
+      });
+      await user.save();
+    }
+
+    // Generate a JWT token
+    const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+
+    // Set the token in the cookie
+    res.cookie('token', jwtToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    return res.json({
+      success: true,
+      message: 'Successfully logged in with Google',
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    return res.json({
+      success: false,
+      message: 'Error during Google login',
     });
   }
 };
