@@ -22,6 +22,8 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+
+
 //api endpoints
 app.get("/", (req, res) => {
   res.send("api working ");

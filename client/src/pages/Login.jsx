@@ -3,10 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import GoogleButton from "./GoogleButton";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { backendUrl, setIsLoggedin , getUserData} = useContext(AppContext);
+  const { backendUrl, setIsLoggedin, getUserData } = useContext(AppContext);
   const [state, setState] = useState("Sign Up");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ const Login = () => {
   const onsubmitHandler = async (e) => {
     try {
       e.preventDefault();
-  
+
       axios.defaults.withCredentials = true;
       if (state === "Sign Up") {
         const { data } = await axios.post(backendUrl + "/api/auth/register", {
@@ -24,7 +25,7 @@ const Login = () => {
           password,
         });
         if (data.success) {
-          localStorage.setItem("token", data.token); 
+          localStorage.setItem("token", data.token);
           setIsLoggedin(true);
           getUserData();
           navigate("/");
@@ -37,7 +38,7 @@ const Login = () => {
           password,
         });
         if (data.success) {
-          localStorage.setItem("token", data.token); 
+          localStorage.setItem("token", data.token);
           setIsLoggedin(true);
           getUserData();
           navigate("/");
@@ -49,7 +50,7 @@ const Login = () => {
       toast.error(error.message);
     }
   };
-  
+
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0">
       <div className="w-full max-w-md mx-auto bg-white p-6 rounded-md shadow-md border border-gray-950">
@@ -57,21 +58,12 @@ const Login = () => {
           {state === "Sign Up" ? "Create Account" : "Login"}
         </h2>
         <p className="text-center text-gray-600">
-          {state === "Sign Up"
-            ? "Create your account"
-            : "Login to your account"}
+          {state === "Sign Up" ? "Create your account" : "Login to your account"}
         </p>
 
         <div className="flex flex-col justify-center pt-8">
           {/* Google Login Button */}
-          <button className="mt-4 flex items-center justify-center rounded-md border px-4 py-2 bg-gray-100 hover:bg-gray-200 transition">
-            <img
-              className="mr-2 h-5"
-              src="https://static.cdnlogo.com/logos/g/35/google-icon.svg"
-              alt="Google Logo"
-            />
-            Log in with Google
-          </button>
+          <GoogleButton />
 
           {/* Divider */}
           <div className="relative mt-8 flex h-px place-items-center bg-gray-200">
@@ -81,10 +73,7 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <form
-            onSubmit={onsubmitHandler}
-            className="flex flex-col pt-3 md:pt-8"
-          >
+          <form onSubmit={onsubmitHandler} className="flex flex-col pt-3 md:pt-8">
             {/* Name input for Sign Up only */}
             {state === "Sign Up" && (
               <div className="flex flex-col pt-4">
@@ -151,7 +140,7 @@ const Login = () => {
                 <>
                   Already have an account?{" "}
                   <Link
-                    href="#"
+                    to="#"
                     onClick={() => setState("Log In")}
                     className="underline-offset-4 font-semibold text-gray-900 underline"
                   >
@@ -162,7 +151,7 @@ const Login = () => {
                 <>
                   Don't have an account?{" "}
                   <Link
-                    href="#"
+                    to="#"
                     onClick={() => setState("Sign Up")}
                     className="underline-offset-4 font-semibold text-gray-900 underline"
                   >
